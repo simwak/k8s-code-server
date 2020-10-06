@@ -43,13 +43,6 @@ RUN HELM_VERSION=v3.0.0 && \
     sudo -S mv /tmp/helm/linux-amd64/helm /usr/local/bin/helm && \
     rm -r /tmp/helm
 
-# kubectx/kubens/fzf
-RUN git clone https://github.com/ahmetb/kubectx /opt/kubectx && \
-    ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx && \
-    ln -s /opt/kubectx/kubens /usr/local/bin/kubens && \
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && \
-    ~/.fzf/install
-
 RUN locale-gen en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
@@ -59,14 +52,17 @@ RUN adduser --disabled-password --gecos '' coder && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers;
 
 RUN chmod g+rw /home && \
-    mkdir -p /home/coder/readme && \
     chown -R coder:coder /home/coder;
 
-USER coder
-
+# Add needed files
 ADD README.md /home/coder/README.md
+ADD init.sh /home/init.sh
 
-RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install
+# Move home directory to tmp for move back after pvc is mounted there
+RUN mv /home/coder /home/codertmp
+
+# Change user
+USER coder
 
 ENV PASSWORD=${PASSWORD:-P@ssw0rd}
 
@@ -77,4 +73,4 @@ WORKDIR /home/coder
 
 EXPOSE 8080
 
-ENTRYPOINT ["dumb-init", "fixuid", "-q", "/usr/bin/code-server", "--bind-addr", "0.0.0.0:8080", "."]
+ENTRYPOINT ["sh", "/home/init.sh"]
