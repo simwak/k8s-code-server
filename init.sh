@@ -7,7 +7,8 @@ if [ -f "/home/coder/.config/code-server/config.yaml" ]; then
 else
   # Full init
   rm -rf /home/coder
-  cp -r /home/codertmp/* /home/coder/
+  mkdir /home/coder
+  cp -rp /home/codertmp/. /home/coder
 fi
 
 # Delete tmp home directory
