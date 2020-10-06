@@ -46,17 +46,21 @@ RUN HELM_VERSION=v3.0.0 && \
 RUN locale-gen en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
+RUN chmod g+rw /home
+
 ## User account
 RUN adduser --disabled-password --gecos '' coder && \
     adduser coder sudo && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers;
 
-RUN chmod g+rw /home && \
-    chown -R coder:coder /home/coder;
-
 # Add needed files
 ADD README.md /home/coder/README.md
 ADD init.sh /home/init.sh
+
+RUN echo "source <(kubectl completion bash)" >> /home/coder/.bashrc && \
+    echo 'export PS1="\[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /home/coder/.bashrc
+
+RUN chown -R coder:coder /home/coder
 
 # Move home directory to tmp for move back after pvc is mounted there
 RUN mv /home/coder /home/codertmp
@@ -65,9 +69,6 @@ RUN mv /home/coder /home/codertmp
 USER coder
 
 ENV PASSWORD=${PASSWORD:-P@ssw0rd}
-
-RUN echo "source <(kubectl completion bash)" >> /home/coder/.bashrc && \
-    echo 'export PS1="\[\e]0;\u@\h: \w\a\]\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /home/coder/.bashrc
 
 WORKDIR /home/coder
 
